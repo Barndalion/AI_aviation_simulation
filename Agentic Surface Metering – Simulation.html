@@ -1,0 +1,170 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Agentic Surface Metering – Simulation</title><style>
+:root{--bg:#0a1119;--p:#101a26;--l:#233649;--t:#d8e4f0;--m:#7f95aa;--g:#3ddc97;--a:#f5b942;--r:#ff5d5d;--c:#4cc9f0;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--t);font:13px/1.4 "Segoe UI",system-ui,sans-serif}
+header{display:flex;flex-wrap:wrap;gap:10px 24px;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--l);background:#0d1722}
+h1{margin:0;font-size:19px;letter-spacing:.14em}header p{margin:2px 0 0;color:var(--m)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}.chip{border:1px solid var(--l);border-radius:4px;padding:3px 8px;font:11px ui-monospace,Consolas,monospace;background:var(--p)}.chip b{color:var(--g)}.chip.w b{color:var(--a)}.chip.b b{color:var(--r)}.chip.s b{color:var(--c)}
+main{display:grid;grid-template-columns:270px minmax(0,1fr) 330px;gap:10px;padding:10px}
+@media(max-width:1150px){main{grid-template-columns:1fr 1fr}#C{grid-column:1/-1;order:-1}}@media(max-width:700px){main{grid-template-columns:1fr}}
+.col{display:flex;flex-direction:column;gap:10px;min-width:0}
+.card{background:var(--p);border:1px solid var(--l);border-radius:6px;padding:10px 12px}
+h2{margin:0 0 8px;font-size:11px;letter-spacing:.12em;color:var(--m);font-weight:600;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+h2 .sim{color:var(--a);font-weight:500}.m{color:var(--m)}.mono{font-family:ui-monospace,Consolas,monospace}
+.ban{margin:10px 10px 0;padding:8px 12px;border-radius:5px;font:600 12px ui-monospace,Consolas,monospace;letter-spacing:.04em;border:1px solid}
+.ban.r{background:#3a1519;border-color:var(--r);color:#ffb3b3}.ban.a{background:#35290e;border-color:var(--a);color:#ffdc94}.ban.g{background:#0f2f24;border-color:var(--g);color:#a6f0cd}
+.ag{display:grid;grid-template-columns:14px 1fr;gap:2px 8px;padding:7px 0;border-top:1px solid var(--l)}.ag:first-of-type{border:0}
+.dot{width:9px;height:9px;border-radius:50%;margin-top:4px;background:var(--g);animation:pl 1.6s infinite}.dot.w{background:var(--a)}.dot.b{background:var(--r)}
+@keyframes pl{50%{opacity:.35;transform:scale(.8)}}
+.ag b{display:flex;justify-content:space-between}.tag{font:10px ui-monospace,monospace;padding:1px 6px;border-radius:3px;background:#12362a;color:var(--g)}.tag.w{background:#3a2d0c;color:var(--a)}.tag.b{background:#3d1519;color:var(--r)}
+table{width:100%;border-collapse:collapse}td,th{padding:4px 2px;text-align:left;font-size:12px;border-top:1px solid var(--l)}th{color:var(--m);font-weight:500;border:0}
+.v{color:var(--g)}.dg{color:var(--a)}.bd{color:var(--r)}
+.btn{background:#14283a;border:1px solid var(--l);color:var(--t);padding:6px 9px;border-radius:4px;cursor:pointer;font:inherit;width:100%;text-align:left;margin-bottom:5px}.btn:hover{border-color:var(--c)}.btn:focus-visible{outline:2px solid var(--c)}
+.btn.go{background:#0f4d63;border-color:var(--c);text-align:center;font-weight:600}
+svg{width:100%;height:auto;display:block;background:#0c1620;border-radius:4px}
+.tw{stroke:#34475a;stroke-width:9;fill:none;stroke-linejoin:round}.tl{font:9px ui-monospace,monospace;fill:#6c8298}
+#tB.on{stroke:#6b4d10}#tA.rec{stroke:#145a42}.ac path{stroke:#04121c;stroke-width:.6}.ac.n path{fill:var(--c)}.ac.q path{fill:var(--r)}.ac.h path{fill:var(--a)}.ac.r path{fill:var(--g)}
+.lb{font:8px ui-monospace,monospace;fill:#fff;paint-order:stroke;stroke:#000;stroke-width:2px}
+#log{font:11px ui-monospace,monospace;color:var(--m);margin-top:6px;min-height:64px}
+.st{display:grid;grid-template-columns:18px 190px 1fr;gap:6px;padding:4px 0;border-top:1px solid var(--l);color:var(--m)}.st i{font-style:normal}.st.d{color:var(--t)}.st.d i{color:var(--g)}.st.a{color:var(--c)}.st span{color:var(--m)}
+.pc{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0}@media(max-width:700px){.pc,.st{grid-template-columns:1fr}}
+.pc div{border:1px solid var(--l);border-radius:5px;padding:7px;font-size:12px}.pc .sel{border-color:var(--g);background:#0f2a21}.pc .x{border-color:#6b2a30;opacity:.8}
+.ck{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px}.ck .w{color:var(--a)}
+.rec{font-size:14px;border-left:3px solid var(--c);padding:6px 10px;background:#0e2230;margin:6px 0}
+.db{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}.db button{padding:12px 4px;font:700 13px inherit;border-radius:5px;border:1px solid;cursor:pointer;color:#fff}
+.db button:disabled{opacity:.3;cursor:not-allowed}.ap{background:#106b48;border-color:var(--g)}.mo{background:#6d5010;border-color:var(--a)}.rj{background:#6f1f27;border-color:var(--r)}
+.stat{font:600 11px ui-monospace,monospace;margin-top:8px;padding:6px;border-radius:4px;background:#0c1620}.pulse{animation:pb 1.2s infinite}@keyframes pb{50%{box-shadow:0 0 0 3px #4cc9f055}}
+.bar{height:8px;border-radius:3px;margin:2px 0 6px}.kp{display:grid;grid-template-columns:1fr 1fr;gap:6px}.kp div{background:#0c1620;border-radius:5px;padding:8px}.kp b{font:600 20px ui-monospace,monospace;color:var(--g);display:block}
+.sc{max-height:210px;overflow:auto}.sc div{padding:5px 0;border-top:1px solid var(--l);font-size:12px}
+.pr{padding:6px 0;border-top:1px solid var(--l);font-size:12px}.pr:first-of-type{border:0}.hi{color:var(--a)}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style></head><body>
+<header><div><h1>AGENTIC SURFACE METERING</h1><p>AI-Assisted Airport Surface Traffic Management</p></div><div class="chips" id="chips"></div></header>
+<div id="ban"></div>
+<main>
+<section class="col"><div class="card"><h2>WATCHER AGENTS</h2><div id="wa"></div></div>
+<div class="card"><h2>DATA HEALTH</h2><table id="dh"></table></div>
+<div class="card"><h2>SYSTEM TEST</h2><div id="st"></div></div></section>
+<section class="col" id="C"><div class="card"><h2><span>LIVE AIRPORT MAP · FICTIONAL LAYOUT</span><span class="sim">SIMULATION / ILLUSTRATIVE DATA</span></h2><svg id="map" viewBox="0 0 820 420" role="img" aria-label="Simplified airport surface map"></svg><div id="log"></div></div>
+<div class="card"><h2>ORCHESTRATOR</h2><div id="orch"></div></div></section>
+<section class="col"><div class="card"><h2>HUMAN CONTROLLER REVIEW</h2><div id="dec"></div></div>
+<div class="card"><h2>RECOMMENDED TRAFFIC PLAN</h2><div id="plan"></div></div>
+<div class="card"><h2>PRIORITY QUEUE</h2><div id="pq"></div></div>
+<div class="card"><h2><span>SURFACE FORECAST</span><span class="sim">SIM ESTIMATES</span></h2><div id="fc"></div></div>
+<div class="card"><h2><span>ESTIMATED IMPACT</span><span class="sim">SIMULATED</span></h2><div id="imp"></div></div></section>
+</main>
+<script>
+const $=q=>document.querySelector(q),H=(q,h)=>{const e=$(q);if(e&&e.innerHTML!==h)e.innerHTML=h};
+const GN=['A12','A14','A16','A18','B04','B06','B08','B10'],gy=i=>78+i*34;
+const W1=[['DAL901',0],['UAL233',1],['SWA512',2],['JBU88',3],['NKS402',4],['AAL119',5],['DAL77',6],['ASA306',7]];
+const W2=[['AAL245',0],['DAL182',2],['UAL417',4],['SWA640',1],['JBU214',3],['DAL455',5],['NKS118',6],['AAL582',7],['ASA77',0],['SWA219',2]];
+const cache={};
+function R(k,i){const key=k+i;if(cache[key])return cache[key];const y=gy(i),g=[112,y],c=[170,y];
+ const p=k=='B'?[g,c,[170,332],[520,332],[520,380],[810,380]]:[g,c,[170,60],[700,60],[700,332],[700,380],[810,380]],d=[0];
+ for(let j=1;j<p.length;j++)d.push(d[j-1]+Math.hypot(p[j][0]-p[j-1][0],p[j][1]-p[j-1][1]));
+ return cache[key]={p,d,L:d[d.length-1],hp:d[k=='B'?3:4]}}
+function pt(r,s){let j=1;while(j<r.d.length-1&&r.d[j]<s)j++;const t=Math.min(1,Math.max(0,(s-r.d[j-1])/(r.d[j]-r.d[j-1]||1))),a=r.p[j-1],b=r.p[j];
+ return[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,Math.atan2(b[1]-a[1],b[0]-a[0])*180/Math.PI]}
+const clk=s=>{s=Math.floor(s)+14*3600+20*60;const f=n=>String(n).padStart(2,'0');return f(s/3600|0)+':'+f(s/60%60|0)+':'+f(s%60)};
+let T,S,A,rw,TM=[],E=[],last=0;const tm=(f,ms)=>TM.push(setTimeout(f,ms)),log=m=>{S.log.unshift(clk(T*30)+'  '+m);S.log.length=Math.min(S.log.length,5)};
+const rwInt=()=>S.rw=='REDUCED'?8:3.6,pend=()=>A.filter(f=>f.st=='gate').sort((a,b)=>a.push-b.push),tx=()=>A.filter(f=>f.st=='taxi');
+const qn=()=>tx().filter(f=>f.q).length,sch=f=>clk(f.p0*30+420).slice(0,5);
+function init(){TM.forEach(clearTimeout);TM=[];T=0;rw={next:4};
+ S={ev:null,twy:'OPEN',rw:'OPEN',adsb:'VALID',surv:'VALID',wx:'VALID',ai:'PRIMARY',net:'ON',iso:0,stage:-1,plan:null,dec:'idle',msg:'',ban:null,imp:0,impT:0,mod:0,auto:0,fail:{},log:[]};
+ A=[...W1.map((w,i)=>[w,i*3.6]),...W2.map((w,i)=>[w,30+i*4.2])].map(([w,p],n)=>({id:w[0],gi:w[1],k:'B',s:0,st:'gate',push:p,p0:p,n,rel:0,q:0,hold:0,rr:0}));
+ log('Airport operating normally');build()}
+function build(){const M=$('#map');let h='<rect x="28" y="56" width="62" height="280" rx="4" fill="#1a2a3a"/><text x="59" y="200" class="tl" text-anchor="middle" transform="rotate(-90 59 200)">TERMINAL</text>';
+ for(let i=0;i<8;i++)h+=`<path d="M92 ${gy(i)}H170" class="tw" style="stroke-width:3"/><circle id="gr${i}" cx="112" cy="${gy(i)}" r="13" fill="none" stroke="#f5b942" stroke-width="1.6" stroke-dasharray="3 2" opacity="0"/><text x="94" y="${gy(i)+3}" class="tl" style="font-size:7px">${GN[i]}</text>`;
+ h+=`<path id="tC" d="M170 60V332" class="tw"/><path id="tB" d="M170 332H520V380" class="tw"/><path id="tA" d="M170 60H700V380" class="tw"/><rect id="rw" x="250" y="372" width="560" height="16" fill="#2a3b4d" stroke="#8fa5ba" stroke-dasharray="10 6"/>
+ <text x="530" y="410" class="tl">RUNWAY 09L</text><text x="330" y="322" class="tl">TWY B</text><text x="400" y="52" class="tl">TWY A</text><text x="176" y="200" class="tl">TWY C</text>
+ <rect x="512" y="324" width="16" height="16" fill="none" stroke="#f5b942"/><text x="536" y="320" class="tl">HP-B</text><rect x="692" y="324" width="16" height="16" fill="none" stroke="#f5b942"/><text x="712" y="320" class="tl">HP-A</text>
+ <text id="hq" x="808" y="20" text-anchor="end" style="font:600 12px ui-monospace,monospace" fill="#d8e4f0"></text><text id="hn" x="400" y="215" text-anchor="middle" style="font:600 12px ui-monospace,monospace" fill="#f5b942"></text><g id="ag"></g>`;
+ M.innerHTML=h;let a='';A.forEach((f,i)=>a+=`<g id="p${i}" class="ac n"><path d="M9 0L2-1.5-2-9H-4L-2-1.5-7-1-8-3H-9.5L-9 0-9.5 3H-8L-7 1-2 1.5-4 9H-2L2 1.5Z"/></g><text id="l${i}" class="lb"></text>`);$('#ag').innerHTML=a}
+function est(f,k){const r=R(k,f.gi),n=A.filter(g=>g.st=='taxi'&&g.k==k&&!g.rel&&g.id!=f.id).length;return Math.max(1,Math.round(((r.hp-f.s)/42*(k=='B'&&S.twy=='RESTRICTED'?1.5:1)+n*rwInt()*.7)/2*10)/10)}
+const unimp=f=>Math.round(R('B',f.gi).hp/42/2*10)/10;
+function pos(f){const r=R(f.k,f.gi);if(f.st=='gate')return'Gate '+GN[f.gi];if(f.s<r.d[1]+2)return'Gate apron';if(f.s<r.d[2])return'Twy C';if(f.s>=r.d[r.p.length-2])return'RWY 09L';return f.s>=r.hp-1?'HP-'+f.k:'Twy '+f.k}
+const evn=()=>S.ev=='rwy'?'Runway 09L capacity reduced (rate −55%)':'Taxiway B restriction: capacity reduced';
+const conf=()=>94-(S.adsb!='VALID'?14:0)-(S.surv!='VALID'?20:0)-(S.net=='OFF'?5:0);
+function blk(){if(S.ai=='OFFLINE')return'Primary AI edge offline – failover in progress. Controller continues normal operations.';if(S.iso)return'Security isolation active – AI recommendations suspended. Controller operating manually.'}
+function pipe(){TM.forEach(clearTimeout);TM=[];S.stage=0;S.plan=null;S.dec='idle';S.msg='';stp()}
+function stp(){const b=blk();if(b){S.dec='wait';S.msg=b;S.plan=null;tm(stp,800);return}
+ if(S.dec=='wait'){S.dec='idle'}
+ if(S.stage<5){S.stage++;if(S.stage==5){fin();return}tm(stp,1400)}}
+function fin(){if(S.surv!='VALID'&&S.adsb!='VALID'){S.dec='none';log('No feasible/reliable plan – decision returned to controller');return}
+ const P=pend(),items=[];let h=0,r=0;const cs=conf()<90;
+ P.forEach((f,j)=>{let pl='cont',hr=0;if(j%2==0&&h<6){pl='hold';hr=6+2*h+(cs?2:0);h++}else if(j%2==1&&r<4){pl='reroute';r++}items.push({f,pl,hr})});
+ const q=qn(),p=P.length;S.plan={items,h,r,aff:tx().filter(f=>f.k=='B').length+p,seq:p,cs,
+  fc:{n:[q+Math.round(p*.9),Math.round((q+p)*1.6),Math.round((q+p)*.6)],y:[q+Math.round(p*.35),Math.round((q+p)*.7),Math.round((q+p)*.2)]}};
+ S.dec='pending';S.hint=T;log('Plan B recommended – awaiting controller review')}
+function scn(k){const e=()=>S.ev&&!['approved','modified'].includes(S.dec)&&pipe();
+ if(k=='normal'){init();return}
+ if(k=='twy'||k=='rwy'){S.ev=k;k=='twy'?S.twy='RESTRICTED':S.rw='REDUCED';S.ban=null;log(evn());log('Event forwarded to ORCHESTRATOR');pipe()}
+ if(k=='sensor'){const w=S.adsb=='VALID'?'adsb':'surv';S[w]='DEGRADED';S.fail[w]=T;S.ban={c:'a',t:w=='adsb'?'ADS-B DATA DEGRADED – continuing on ASDE-X + multilateration':'SURFACE SURVEILLANCE ALSO DEGRADED – insufficient independent surveillance'};log(S.ban.t);e()}
+ if(k=='ai'){S.ai='OFFLINE';S.ban={c:'r',t:'PRIMARY AI EDGE SYSTEM OFFLINE'};log('Primary edge offline');e();tm(()=>{S.ai='BACKUP';S.ban={c:'g',t:'BACKUP EDGE SYSTEM ACTIVE – state re-validated, recommendations resume'};log('Backup edge active');if(S.ev&&S.dec=='wait')pipe()},3200)}
+ if(k=='net'){S.net='OFF';S.ban={c:'a',t:'CLOUD LINK LOST – local edge continues; flight schedule cached (STALE); model updates paused'};log('Cloud link lost');e()}
+ if(k=='cyb'){S.ban={c:'r',t:'SECURITY EVENT DETECTED – anomalous traffic on weather gateway segment'};log('Security event detected');S.ai='HOLD';e();tm(()=>{S.iso=1;S.wx='ISOLATED';S.ban={c:'r',t:'AFFECTED COMPONENT ISOLATED – no data path from AI to aircraft control; controller manual'};log('Weather gateway isolated');if(S.ev)pipe();else{S.dec='wait';S.msg=blk()}},2000)}}
+function demo(){init();S.auto=22;S.ban={c:'g',t:'GUIDED DEMO: normal operations → taxiway restriction at ~14:31 sim time'}}
+function decide(d){if(S.dec!='pending')return;if(d=='rj'){S.dec='rejected';S.plan=null;log('Recommendation rejected – controller retains control');return}
+ if(d=='mo'){S.mod=1;return}S.mod=0;apply(d=='ap'?'approved':'modified')}
+function apply(x){S.dec=x;S.impT=1;S.plan.items.forEach(o=>{if(o.pl=='hold'){o.f.push+=o.hr;o.f.hold=o.hr}if(o.pl=='reroute')o.f.rr=1,o.f.k='A'});log('Plan approved by controller – routes updated')}
+function modOk(){const m=+$('#mh').value,rr=$('#mr').checked,P=S.plan;let first=1;P.items.forEach(o=>{if(o.pl=='hold'&&first){o.hr=m*2;first=0}if(o.f.id=='DAL182'&&!rr)o.pl='cont'});P.r=P.items.filter(o=>o.pl=='reroute').length;S.mod=0;apply('modified')}
+function step(dt){T+=dt;if(S.auto&&T>=S.auto){S.auto=0;S.ban=null;scn('twy')}
+ if(T>=rw.next){const c=A.filter(f=>f.st=='taxi'&&!f.rel&&f.s>=R(f.k,f.gi).hp-.5).sort((a,b)=>a.hpT-b.hpT);if(c.length){c[0].rel=1;rw.next=T+rwInt()}}
+ A.forEach(f=>{if(f.st=='gate'){if(T>=f.push){f.st='taxi'}return}if(f.st!='taxi')return;
+  const r=R(f.k,f.gi);let v=42;if(f.k=='B'&&S.twy=='RESTRICTED'&&f.s>r.d[2]&&f.s<r.hp)v*=.4;if(f.rel&&f.s>=r.hp)v=130;
+  let lim=f.rel?r.L:r.hp;const rem=r.hp-f.s;A.forEach(g=>{if(g!==f&&g.st=='taxi'&&g.k==f.k){const rg=R(g.k,g.gi).hp-g.s;if(rg<rem&&rg>-300)lim=Math.min(lim,r.hp-rg-30)}});
+  const o=f.s;if(lim>f.s)f.s=Math.min(f.s+v*dt,lim);f.q=f.s>15&&(f.s-o)/dt<9&&!f.rel&&f.s<r.L-60?1:0;
+  if(!f.hpT&&f.s>=r.hp-.5)f.hpT=T;if(f.s>=r.L-.5)f.st='done'});
+ S.imp+=(S.impT-S.imp)*Math.min(1,dt*.7)}
+function draw(){const sh=!!S.plan&&S.dec!='rejected'||['approved','modified'].includes(S.dec);
+ A.forEach((f,i)=>{const g=$('#p'+i),l=$('#l'+i);if(!g)return;const vis=f.st!='done'&&(f.st!='gate'||!A.some(o=>o.gi==f.gi&&o.n<f.n&&(o.st=='gate'||(o.st=='taxi'&&o.s<14))));
+  g.style.display=l.style.display=vis?'':'none';if(!vis)return;const r=R(f.k,f.gi),[x,y,a]=pt(r,f.s);g.setAttribute('transform',`translate(${x} ${y}) rotate(${a}) scale(.95)`);
+  g.setAttribute('class','ac '+(f.hold&&f.st=='gate'?'h':f.q?'q':f.rr?'r':'n'));const flag=f.hold||f.rr||['AAL245','DAL182','UAL417'].includes(f.id);
+  l.textContent=flag?f.id:'';l.setAttribute('x',x+10);l.setAttribute('y',y-9)});
+ $('#tB').classList.toggle('on',S.twy=='RESTRICTED');$('#tA').classList.toggle('rec',sh&&(S.plan?S.plan.r>0:true));
+ $('#rw').setAttribute('fill',S.rw=='REDUCED'?'#5a4410':'#2a3b4d');
+ for(let i=0;i<8;i++){const on=S.plan&&S.plan.items.some(o=>o.f.gi==i&&o.pl=='hold'&&o.f.st=='gate'&&!(S.dec=='rejected'));$('#gr'+i).setAttribute('opacity',on?1:0)}
+ $('#hq').textContent='Surface queue: '+qn();$('#hn').textContent=S.twy=='RESTRICTED'?'TWY B RESTRICTED':S.rw=='REDUCED'?'RWY CAPACITY REDUCED':''}
+function agents(){const q=qn(),tr=20+A.filter(f=>f.st!='done').length,ad=S.adsb!='VALID',su=S.surv!='VALID';
+ const a=[['Weather Agent',S.wx=='ISOLATED'?['b','ISOLATED','Feed quarantined by security']:['','VALID','Wind 8 kt · Visibility 10 mi'],'Weather sensors'],
+ ['Runway Agent',S.rw=='REDUCED'?['w','ANOMALY DETECTED','Runway 09L rate reduced']:['','VALID','Runway 09L: Available'],'Runway status'],
+ ['Taxiway Agent',S.twy=='RESTRICTED'?['w','ANOMALY DETECTED','Taxiway B capacity reduced']:['','VALID','Taxiways A, B, C open'],'Taxiway status'],
+ ['Traffic Agent',ad&&su?['b','INSUFFICIENT DATA','Surveillance redundancy lost']:ad||su?['w','DEGRADED INPUT',(ad?'ADS-B':'Radar')+' unavailable; using remaining sources']:['','MONITORING',tr+' aircraft tracked · queue '+q],'Surveillance, ADS-B, schedules']];
+ let h='';a.forEach(([n,[c,s,d],w],i)=>h+=`<div class="ag"><span class="dot ${c}"></span><div><b>${n}<span class="tag ${c}">${s}</span></b><div>${d}</div><div class="m">Watching: ${w} · updated ${clk(T*30).slice(3)}</div></div></div>`);
+ if(S.ev&&S.stage>=0)h+=`<div class="stat" style="color:#4cc9f0">Event forwarded to ORCHESTRATOR</div>`;return h}
+function dhx(){const age=(k,b)=>S.fail[k]!=null?Math.floor(T-S.fail[k])+5:1+Math.floor((T*.9+b*3)%b);
+ const d=[['Surface Surveillance',S.surv,age('surv',2)],['ADS-B',S.adsb,age('adsb',2)],['Weather',S.wx,age('wx',4)],['Runway Status','VALID',age('r',3)],['Taxiway Status','VALID',age('t',3)],['Flight Schedule',S.net=='OFF'?'STALE':'VALID',S.net=='OFF'?Math.floor(T)+12:age('f',12)]];
+ return'<tr><th>Source</th><th>Status</th><th>Last</th></tr>'+d.map(([n,s,a])=>`<tr><td>${n}</td><td class="${s=='VALID'?'v':s=='DEGRADED'||s=='STALE'?'dg':'bd'}">${s}</td><td class="m">${a}s ago</td></tr>`).join('')}
+function orch(){if(S.stage<0)return'<p class="m">No active event. Watcher agents are monitoring; the orchestrator is idle.</p>';
+ const P=S.plan,SG=['Event detected','Impact analysis','Generating candidate plans','Constraint evaluation','Re-validation with updated data','Recommended plan'];
+ const aff=tx().filter(f=>f.k=='B').length+pend().length;
+ const dt=[evn(),aff+' aircraft potentially affected','Plan A · Plan B · Plan C','Hard constraints checked','Latest surveillance snapshot ingested',P?'Plan B selected · confidence '+conf()+'%':S.dec=='none'?'No plan satisfies required constraints':S.msg||'…'];
+ let h=SG.map((n,i)=>{const c=i<S.stage||(i==5&&S.stage==5&&S.dec!='wait')?'d':i==S.stage?'a':'w';return`<div class="st ${c}"><i>${c=='d'?'✓':c=='a'?'●':'○'}</i><b>${n}</b><span>${i<=S.stage?dt[i]:''}</span></div>`}).join('');
+ if(S.stage>=2){const s=S.stage>=5&&P;h+=`<div class="pc"><div><b>Plan A</b><br>Gate holds only<br><span class="m">+4.1 min avg · queue 9</span><br>Feasible</div><div class="${s?'sel':''}"><b>Plan B</b><br>Holds + reroute via TWY A + resequence<br><span class="m">+2.6 min avg · queue 5</span><br>${s?'SELECTED':'Feasible'}</div><div class="${S.stage>=3?'x':''}"><b>Plan C</b><br>Reroute all via TWY A<br>${S.stage>=3?'<span class="bd">DISCARDED – violates separation constraint at HP-A</span>':'Evaluating…'}</div></div>`}
+ if(S.stage>=3){const su=S.surv!='VALID'||S.adsb!='VALID';h+=`<div class="ck">${['Runway availability','Taxiway restrictions','Aircraft positions'+(su?' (⚠ reduced sources)':''),'Separation requirements','Departure sequencing','Gate availability'].map(c=>`<span class="${c.includes('⚠')?'w':'v'}">${c.includes('⚠')?'⚠':'✓'} ${c}</span>`).join('')}</div>`}
+ return h}
+function recTxt(){const P=S.plan,h=P.items.find(o=>o.pl=='hold'),r=P.items.find(o=>o.pl=='reroute');return[h&&`Hold ${h.f.id} at Gate ${GN[h.f.gi]} for ${h.hr/2} min`,r&&`reroute ${r.f.id} via Taxiway A`].filter(Boolean).join(' and ')+`. ${P.h+P.r-(h?1:0)-(r?1:0)>0?'Plus '+(P.h+P.r-(h?1:0)-(r?1:0))+' further actions.':''}`}
+function dec(){const d=S.dec,P=S.plan,m={idle:['AWAITING EVENT – AI MONITORING','m'],wait:[(S.msg||'AI recommendations paused')+'','dg'],none:['NO RELIABLE AI RECOMMENDATION — CONTROLLER DECISION REQUIRED','bd'],approved:['PLAN APPROVED BY CONTROLLER','v'],modified:['PLAN MODIFIED & APPROVED BY CONTROLLER','dg'],rejected:['AI RECOMMENDATION REJECTED — CONTROLLER RETAINS CONTROL','bd'],pending:['AI RECOMMENDATION READY – CONTROLLER REVIEW REQUIRED','dg']}[d];
+ let h=P&&d!='rejected'?`<div class="rec">${recTxt()}${P.cs?'<br><span class="dg">Constrained plan: degraded inputs, wider buffers applied · confidence '+conf()+'%</span>':'<br><span class="m">Confidence '+conf()+'%</span>'}</div>`:'<div class="rec m">'+(d=='none'?'No recommendation issued.':'No active AI recommendation.')+'</div>';
+ if(S.mod&&P)h+=`<div class="stat">Modify: hold minutes for first held aircraft <select id="mh">${[1,2,3,4,5,6].map(n=>`<option ${n==3?'selected':''}>${n}</option>`).join('')}</select><br><label><input type="checkbox" id="mr" checked> Reroute DAL182 via TWY A</label> <button class="btn go" style="margin-top:6px" onclick="modOk()">Apply & approve</button></div>`;
+ const e=d=='pending'?'':'disabled';h+=`<div class="db"><button class="ap" ${e} onclick="decide('ap')">APPROVE</button><button class="mo" ${e} onclick="decide('mo')">MODIFY</button><button class="rj" ${e} onclick="decide('rj')">REJECT</button></div><div class="stat ${d=='pending'&&T-S.hint<99?'pulse':''} ${m[1]}">${m[0]}</div><div class="m" style="margin-top:6px">Advisory only. The AI has no data path to aircraft control.</div>`;return h}
+function planx(){const P=S.plan;if(!P||S.dec=='rejected')return'<p class="m">No plan to display.</p>';
+ let h=`<div class="kp"><div><b>${P.aff}</b>affected</div><div><b>${P.h}</b>gate holds</div><div><b>${P.r}</b>alt. taxi routes</div><div><b>${P.seq}</b>sequence changes</div></div><div class="sc">`;
+ P.items.filter(o=>o.pl!='cont').forEach(o=>{const f=o.f,rec=o.pl=='hold'?'HOLD '+o.hr/2+' min at gate':'Twy A → HP-A',e=est(f,o.pl=='reroute'?'A':'B'),d=o.pl=='hold'?o.hr/2:Math.max(0,Math.round((e-unimp(f))*10)/10);
+  h+=`<div><b>${f.id}</b> · ${pos(f)} · Twy B → <b class="v">${rec}</b><br><span class="m">Est. taxi ${e} min · delay ${d} min · ${o.pl=='hold'?'prevents surface queue buildup':'avoids loaded Twy B, balances holding points'}</span></div>`});return h+'</div>'}
+function pq(){const L=[...pend().slice(0,3),...tx().filter(f=>f.q).slice(0,1)];if(!L.length)return'<p class="m">No flights requiring attention.</p>';
+ return L.map((f,i)=>{const o=S.plan&&S.plan.items.find(x=>x.f===f),act=f.hold?'HOLD '+f.hold/2+' MIN (ACTIVE)':f.rr?'REROUTED VIA TWY A':o&&S.dec!='rejected'?(o.pl=='hold'?'HOLD '+o.hr/2+' MIN':o.pl=='reroute'?'REROUTE TWY A':'CONTINUE'):f.st=='gate'?'MONITOR':'CONTINUE';
+  return`<div class="pr"><b>${i+1}. ${f.id}</b> <span class="${i<2?'hi':'m'}">${i<2?'HIGH':'NORMAL'}</span><br>Sched dep ${sch(f)} · ${pos(f)}<br><b class="v">${act}</b></div>`}).join('')}
+function fc(){const P=S.plan;if(!P||S.dec=='rejected')return'<p class="m">Forecast appears when an event is analysed.</p>';const n=P.fc.n,y=P.fc.y,mx=Math.max(...n,1);
+ const row=(l,i)=>`<div>${l}</div><div class="bar" style="width:${n[i]/mx*100}%;background:#ff5d5d"></div><div class="bar" style="width:${y[i]/mx*100}%;background:#3ddc97"></div>`;
+ return`<div class="m">Red: without intervention (${n.join(' / ')}) · Green: with plan (${y.join(' / ')})</div>${row('Aircraft projected to queue',0)}${row('Projected congestion (min)',1)}${row('Aircraft over target taxi time',2)}`}
+function imp(){const k=S.imp,P=S.plan,a=(['approved','modified'].includes(S.dec)&&P)?P.aff:0;
+ return`<div class="kp"><div><b>${(83.3*k).toFixed(1)} kg</b>fuel / flight</div><div><b>${(256.6*k).toFixed(1)} kg</b>CO₂ / flight</div><div><b>${(6.3*k).toFixed(1)} min</b>taxi-out / flight</div><div><b>${Math.round(a*Math.min(1,k*1.5))}</b>aircraft affected</div></div><p class="m" style="font-size:11px">SIMULATED / ILLUSTRATIVE ESTIMATE. Per-flight values are the deck's mean excess benchmarks (Slide 3), shown as the target avoided per affected flight. Annual model (Slide 9): 24,000 gal fuel, ~230 t CO₂, $490K per hub.</p>`}
+function chips(){const d=S.ai=='OFFLINE'||S.iso||S.ai=='HOLD',w=S.adsb!='VALID'||S.surv!='VALID'||S.net=='OFF',v=6-(S.surv!='VALID')-(S.adsb!='VALID')-(S.wx!='VALID')-(S.net=='OFF');
+ const c=(t,v,k='')=>`<span class="chip ${k}">${t} <b>${v}</b></span>`;
+ return c('SYSTEM',d?'DEGRADED':w?'OPERATIONAL (CONSTRAINED)':'OPERATIONAL',d?'b':w?'w':'')+c('AIRPORT','ATL','s')+c('MODE','SIMULATION MODE','w')+c('AI',S.ai=='OFFLINE'?'PRIMARY OFFLINE':S.ai=='BACKUP'?'BACKUP EDGE ACTIVE':S.ai=='HOLD'||S.iso?'SECURITY HOLD':'PRIMARY EDGE ACTIVE',S.ai=='OFFLINE'||S.iso?'b':S.ai=='BACKUP'?'w':'')+c('NETWORK',S.net=='OFF'?'CLOUD LINK LOST':'ONLINE',S.net=='OFF'?'w':'')+c('DATA HEALTH',v+'/6',v<6?'w':'')+c('SIM TIME',clk(T*30),'s')}
+function stbtn(){return[['normal','Normal Operations'],['rwy','Runway Capacity Reduction'],['twy','Taxiway Restriction'],['sensor',S.adsb=='VALID'?'Partial Sensor Failure (ADS-B)':'Escalate: surveillance also lost'],['ai','AI System Failure'],['net','Network Failure'],['cyb','Cybersecurity Isolation']].map(([k,t])=>`<button class="btn" onclick="scn('${k}')">${t}</button>`).join('')+'<button class="btn go" onclick="demo()">▶ Run guided demo</button>'}
+function ui(){H('#chips',chips());H('#ban',S.ban?`<div class="ban ${S.ban.c}">${S.ban.t}</div>`:'');H('#wa',agents());H('#dh',dhx());H('#st',stbtn());H('#orch',orch());H('#dec',dec());H('#plan',planx());H('#pq',pq());H('#fc',fc());H('#imp',imp());H('#log',S.log.map(l=>'<div>'+l+'</div>').join(''))}
+function loop(t){const dt=Math.min(.05,(t-last)/1000||0);last=t;step(dt);draw();requestAnimationFrame(loop)}
+init();ui();setInterval(ui,250);requestAnimationFrame(loop);
+</script></body></html>
