@@ -70,7 +70,7 @@ let T,S,A,rw,TM=[],E=[],last=0;const tm=(f,ms)=>TM.push(setTimeout(f,ms)),log=m=
 const rwInt=()=>S.rw=='REDUCED'?8:3.6,pend=()=>A.filter(f=>f.st=='gate').sort((a,b)=>a.push-b.push),tx=()=>A.filter(f=>f.st=='taxi');
 const qn=()=>tx().filter(f=>f.q).length,sch=f=>clk(f.p0*30+420).slice(0,5);
 function init(){TM.forEach(clearTimeout);TM=[];T=0;rw={next:4};
- S={ev:null,twy:'OPEN',rw:'OPEN',adsb:'VALID',surv:'VALID',wx:'VALID',ai:'PRIMARY',net:'ON',iso:0,stage:-1,plan:null,dec:'idle',msg:'',ban:null,imp:0,impT:0,mod:0,auto:0,fail:{},log:[]};
+ S={ev:null,twy:'OPEN',rw:'OPEN',adsb:'VALID',surv:'VALID',wx:'VALID',ai:'PRIMARY',net:'ON',iso:0,stage:-1,plan:null,dec:'idle',msg:'',ban:null,imp:0,impT:0,mod:0,fz:0,auto:0,fail:{},log:[]};
  A=[...W1.map((w,i)=>[w,i*3.6]),...W2.map((w,i)=>[w,30+i*4.2])].map(([w,p],n)=>({id:w[0],gi:w[1],k:'B',s:0,st:'gate',push:p,p0:p,n,rel:0,q:0,hold:0,rr:0}));
  log('Airport operating normally');build()}
 function build(){const M=$('#map');let h='<rect x="28" y="56" width="62" height="280" rx="4" fill="#1a2a3a"/><text x="59" y="200" class="tl" text-anchor="middle" transform="rotate(-90 59 200)">TERMINAL</text>';
@@ -95,20 +95,22 @@ function fin(){if(S.surv!='VALID'&&S.adsb!='VALID'){S.dec='none';log('No feasibl
  P.forEach((f,j)=>{let pl='cont',hr=0;if(j%2==0&&h<6){pl='hold';hr=6+2*h+(cs?2:0);h++}else if(j%2==1&&r<4){pl='reroute';r++}items.push({f,pl,hr})});
  const q=qn(),p=P.length;S.plan={items,h,r,aff:tx().filter(f=>f.k=='B').length+p,seq:p,cs,
   fc:{n:[q+Math.round(p*.9),Math.round((q+p)*1.6),Math.round((q+p)*.6)],y:[q+Math.round(p*.35),Math.round((q+p)*.7),Math.round((q+p)*.2)]}};
- S.dec='pending';S.hint=T;log('Plan B recommended – awaiting controller review')}
+ S.dec='pending';S.fz=1;S.hint=T;log('Plan B recommended – awaiting controller review')}
 function scn(k){const e=()=>S.ev&&!['approved','modified'].includes(S.dec)&&pipe();
- if(k=='normal'){init();return}
+ if(k=='normal'){init();return}S.fz=1;
  if(k=='twy'||k=='rwy'){S.ev=k;k=='twy'?S.twy='RESTRICTED':S.rw='REDUCED';S.ban=null;log(evn());log('Event forwarded to ORCHESTRATOR');pipe()}
  if(k=='sensor'){const w=S.adsb=='VALID'?'adsb':'surv';S[w]='DEGRADED';S.fail[w]=T;S.ban={c:'a',t:w=='adsb'?'ADS-B DATA DEGRADED – continuing on ASDE-X + multilateration':'SURFACE SURVEILLANCE ALSO DEGRADED – insufficient independent surveillance'};log(S.ban.t);e()}
  if(k=='ai'){S.ai='OFFLINE';S.ban={c:'r',t:'PRIMARY AI EDGE SYSTEM OFFLINE'};log('Primary edge offline');e();tm(()=>{S.ai='BACKUP';S.ban={c:'g',t:'BACKUP EDGE SYSTEM ACTIVE – state re-validated, recommendations resume'};log('Backup edge active');if(S.ev&&S.dec=='wait')pipe()},3200)}
  if(k=='net'){S.net='OFF';S.ban={c:'a',t:'CLOUD LINK LOST – local edge continues; flight schedule cached (STALE); model updates paused'};log('Cloud link lost');e()}
  if(k=='cyb'){S.ban={c:'r',t:'SECURITY EVENT DETECTED – anomalous traffic on weather gateway segment'};log('Security event detected');S.ai='HOLD';e();tm(()=>{S.iso=1;S.wx='ISOLATED';S.ban={c:'r',t:'AFFECTED COMPONENT ISOLATED – no data path from AI to aircraft control; controller manual'};log('Weather gateway isolated');if(S.ev)pipe();else{S.dec='wait';S.msg=blk()}},2000)}}
 function demo(){init();S.auto=22;S.ban={c:'g',t:'GUIDED DEMO: normal operations → taxiway restriction at ~14:31 sim time'}}
-function decide(d){if(S.dec!='pending')return;if(d=='rj'){S.dec='rejected';S.plan=null;log('Recommendation rejected – controller retains control');return}
+function decide(d){if(S.dec!='pending')return;if(d=='rj'){S.dec='rejected';S.fz=0;S.plan=null;log('Recommendation rejected – controller retains control');return}
  if(d=='mo'){S.mod=1;return}S.mod=0;apply(d=='ap'?'approved':'modified')}
-function apply(x){S.dec=x;S.impT=1;S.plan.items.forEach(o=>{if(o.pl=='hold'){o.f.push+=o.hr;o.f.hold=o.hr}if(o.pl=='reroute')o.f.rr=1,o.f.k='A'});log('Plan approved by controller – routes updated')}
+function apply(x){S.dec=x;S.fz=0;S.impT=1;S.plan.items.forEach(o=>{if(o.pl=='hold'){o.f.push+=o.hr;o.f.hold=o.hr}if(o.pl=='reroute')o.f.rr=1,o.f.k='A'});log('Plan approved by controller – routes updated')}
 function modOk(){const m=+$('#mh').value,rr=$('#mr').checked,P=S.plan;let first=1;P.items.forEach(o=>{if(o.pl=='hold'&&first){o.hr=m*2;first=0}if(o.f.id=='DAL182'&&!rr)o.pl='cont'});P.r=P.items.filter(o=>o.pl=='reroute').length;S.mod=0;apply('modified')}
-function step(dt){T+=dt;if(S.auto&&T>=S.auto){S.auto=0;S.ban=null;scn('twy')}
+const frz=()=>!!S.fz;
+function ack(){S.fz=0;log('Controller acknowledged – assumes manual control; traffic resumes')}
+function step(dt){if(frz())return;T+=dt;if(S.auto&&T>=S.auto){S.auto=0;S.ban=null;scn('twy')}
  if(T>=rw.next){const c=A.filter(f=>f.st=='taxi'&&!f.rel&&f.s>=R(f.k,f.gi).hp-.5).sort((a,b)=>a.hpT-b.hpT);if(c.length){c[0].rel=1;rw.next=T+rwInt()}}
  A.forEach(f=>{if(f.st=='gate'){if(T>=f.push){f.st='taxi'}return}if(f.st!='taxi')return;
   const r=R(f.k,f.gi);let v=42;if(f.k=='B'&&S.twy=='RESTRICTED'&&f.s>r.d[2]&&f.s<r.hp)v*=.4;if(f.rel&&f.s>=r.hp)v=130;
@@ -124,7 +126,7 @@ function draw(){const sh=!!S.plan&&S.dec!='rejected'||['approved','modified'].in
  $('#tB').classList.toggle('on',S.twy=='RESTRICTED');$('#tA').classList.toggle('rec',sh&&(S.plan?S.plan.r>0:true));
  $('#rw').setAttribute('fill',S.rw=='REDUCED'?'#5a4410':'#2a3b4d');
  for(let i=0;i<8;i++){const on=S.plan&&S.plan.items.some(o=>o.f.gi==i&&o.pl=='hold'&&o.f.st=='gate'&&!(S.dec=='rejected'));$('#gr'+i).setAttribute('opacity',on?1:0)}
- $('#hq').textContent='Surface queue: '+qn();$('#hn').textContent=S.twy=='RESTRICTED'?'TWY B RESTRICTED':S.rw=='REDUCED'?'RWY CAPACITY REDUCED':''}
+ $('#hq').textContent='Surface queue: '+qn();$('#hn').textContent=frz()?'TRAFFIC PAUSED – AWAITING CONTROLLER DECISION':S.twy=='RESTRICTED'?'TWY B RESTRICTED':S.rw=='REDUCED'?'RWY CAPACITY REDUCED':''}
 function agents(){const q=qn(),tr=20+A.filter(f=>f.st!='done').length,ad=S.adsb!='VALID',su=S.surv!='VALID';
  const a=[['Weather Agent',S.wx=='ISOLATED'?['b','ISOLATED','Feed quarantined by security']:['','VALID','Wind 8 kt · Visibility 10 mi'],'Weather sensors'],
  ['Runway Agent',S.rw=='REDUCED'?['w','ANOMALY DETECTED','Runway 09L rate reduced']:['','VALID','Runway 09L: Available'],'Runway status'],
@@ -144,10 +146,10 @@ function orch(){if(S.stage<0)return'<p class="m">No active event. Watcher agents
  if(S.stage>=3){const su=S.surv!='VALID'||S.adsb!='VALID';h+=`<div class="ck">${['Runway availability','Taxiway restrictions','Aircraft positions'+(su?' (⚠ reduced sources)':''),'Separation requirements','Departure sequencing','Gate availability'].map(c=>`<span class="${c.includes('⚠')?'w':'v'}">${c.includes('⚠')?'⚠':'✓'} ${c}</span>`).join('')}</div>`}
  return h}
 function recTxt(){const P=S.plan,h=P.items.find(o=>o.pl=='hold'),r=P.items.find(o=>o.pl=='reroute');return[h&&`Hold ${h.f.id} at Gate ${GN[h.f.gi]} for ${h.hr/2} min`,r&&`reroute ${r.f.id} via Taxiway A`].filter(Boolean).join(' and ')+`. ${P.h+P.r-(h?1:0)-(r?1:0)>0?'Plus '+(P.h+P.r-(h?1:0)-(r?1:0))+' further actions.':''}`}
-function dec(){const d=S.dec,P=S.plan,m={idle:['AWAITING EVENT – AI MONITORING','m'],wait:[(S.msg||'AI recommendations paused')+'','dg'],none:['NO RELIABLE AI RECOMMENDATION — CONTROLLER DECISION REQUIRED','bd'],approved:['PLAN APPROVED BY CONTROLLER','v'],modified:['PLAN MODIFIED & APPROVED BY CONTROLLER','dg'],rejected:['AI RECOMMENDATION REJECTED — CONTROLLER RETAINS CONTROL','bd'],pending:['AI RECOMMENDATION READY – CONTROLLER REVIEW REQUIRED','dg']}[d];
+function dec(){const d=S.dec,P=S.plan,m={idle:['AWAITING EVENT – AI MONITORING','m'],wait:[(S.msg||'AI recommendations paused')+'','dg'],none:['NO RELIABLE AI RECOMMENDATION — CONTROLLER DECISION REQUIRED','bd'],approved:['PLAN APPROVED BY CONTROLLER','v'],modified:['PLAN MODIFIED & APPROVED BY CONTROLLER','dg'],rejected:['AI RECOMMENDATION REJECTED — CONTROLLER RETAINS CONTROL','bd'],pending:['AI RECOMMENDATION READY – TRAFFIC PAUSED UNTIL CONTROLLER DECIDES','dg']}[d];
  let h=P&&d!='rejected'?`<div class="rec">${recTxt()}${P.cs?'<br><span class="dg">Constrained plan: degraded inputs, wider buffers applied · confidence '+conf()+'%</span>':'<br><span class="m">Confidence '+conf()+'%</span>'}</div>`:'<div class="rec m">'+(d=='none'?'No recommendation issued.':'No active AI recommendation.')+'</div>';
  if(S.mod&&P)h+=`<div class="stat">Modify: hold minutes for first held aircraft <select id="mh">${[1,2,3,4,5,6].map(n=>`<option ${n==3?'selected':''}>${n}</option>`).join('')}</select><br><label><input type="checkbox" id="mr" checked> Reroute DAL182 via TWY A</label> <button class="btn go" style="margin-top:6px" onclick="modOk()">Apply & approve</button></div>`;
- const e=d=='pending'?'':'disabled';h+=`<div class="db"><button class="ap" ${e} onclick="decide('ap')">APPROVE</button><button class="mo" ${e} onclick="decide('mo')">MODIFY</button><button class="rj" ${e} onclick="decide('rj')">REJECT</button></div><div class="stat ${d=='pending'&&T-S.hint<99?'pulse':''} ${m[1]}">${m[0]}</div><div class="m" style="margin-top:6px">Advisory only. The AI has no data path to aircraft control.</div>`;return h}
+ const e=d=='pending'?'':'disabled';h+=`<div class="db"><button class="ap" ${e} onclick="decide('ap')">APPROVE</button><button class="mo" ${e} onclick="decide('mo')">MODIFY</button><button class="rj" ${e} onclick="decide('rj')">REJECT</button></div><div class="stat ${d=='pending'&&T-S.hint<99?'pulse':''} ${m[1]}">${m[0]}</div>${S.fz&&d!='pending'?'<button class="btn go" style="margin-top:8px" onclick="ack()">Acknowledge – controller assumes manual control</button>':''}<div class="m" style="margin-top:6px">Advisory only. The AI has no data path to aircraft control.</div>`;return h}
 function planx(){const P=S.plan;if(!P||S.dec=='rejected')return'<p class="m">No plan to display.</p>';
  let h=`<div class="kp"><div><b>${P.aff}</b>affected</div><div><b>${P.h}</b>gate holds</div><div><b>${P.r}</b>alt. taxi routes</div><div><b>${P.seq}</b>sequence changes</div></div><div class="sc">`;
  P.items.filter(o=>o.pl!='cont').forEach(o=>{const f=o.f,rec=o.pl=='hold'?'HOLD '+o.hr/2+' min at gate':'Twy A → HP-A',e=est(f,o.pl=='reroute'?'A':'B'),d=o.pl=='hold'?o.hr/2:Math.max(0,Math.round((e-unimp(f))*10)/10);
